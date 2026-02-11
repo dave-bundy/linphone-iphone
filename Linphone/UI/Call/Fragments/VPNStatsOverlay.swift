@@ -46,6 +46,15 @@ struct VPNStatsOverlay: View {
                 statLine(callStatsModel.audioBandwidth)
                 statLine(callStatsModel.audioLossRate)
                 statLine(callStatsModel.audioJitterBufferSize)
+
+                if callStatsModel.isVideoEnabled {
+                    Divider().background(.white.opacity(0.3))
+                    statLine(callStatsModel.videoCodec)
+                    statLine(callStatsModel.videoBandwidth)
+                    statLine(callStatsModel.videoLossRate)
+                    statLine(callStatsModel.videoResolution)
+                    statLine(callStatsModel.videoFps)
+                }
             }
         }
         .padding(.horizontal, 12)
