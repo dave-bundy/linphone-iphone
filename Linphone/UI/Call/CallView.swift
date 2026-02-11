@@ -225,13 +225,27 @@ struct CallView: View {
 				}
 			}
             .background(Color.gray900)
+            .overlay(alignment: .topLeading) {
+                if StellarVPNManager.shared.overlayEnabled
+                    && StellarVPNManager.shared.vpnClient.status == .connected
+                    && telecomManager.callInProgress
+                    && !telecomManager.outgoingCallStarted {
+                    VPNStatsOverlay(vpnManager: StellarVPNManager.shared, callStatsModel: callViewModel.callStatsModel, qualityValue: callViewModel.qualityValue)
+                        .padding(.leading, 12)
+                        .padding(.top, topBarHeight + 20)
+                }
+            }
 			.onAppear {
 				UIApplication.shared.endEditing()
 				fullscreenVideo = false
 				if geo.size.width < 350 || geo.size.height < 350 {
 					buttonSize = 45.0
 				}
+                StellarVPNManager.shared.startStatsPolling()
 			}
+            .onDisappear {
+                StellarVPNManager.shared.stopStatsPolling()
+            }
             .onChange(of: scenePhase) { newPhase in
                 switch newPhase {
                 case .active:

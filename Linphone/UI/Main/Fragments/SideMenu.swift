@@ -32,6 +32,7 @@ struct SideMenu: View {
 	@Binding var isShowLoginFragment: Bool
 	@Binding var isShowAccountProfileFragment: Bool
 	@Binding var isShowSettingsFragment: Bool
+	@Binding var isShowVPNSettingsFragment: Bool
 	@Binding var isShowRecordingsListFragment: Bool
 	@Binding var isShowHelpFragment: Bool
 	@State private var showHelp = false
@@ -137,8 +138,17 @@ struct SideMenu: View {
 								isShowSettingsFragment = true
 							}
 						}
-						
-						
+
+						SideMenuEntry(
+							iconName: "globe-hemisphere-west",
+							title: "VPN Settings"
+						).onTapGesture {
+							self.menuClose()
+							withAnimation {
+								isShowVPNSettingsFragment = true
+							}
+						}
+
 						if !AppServices.corePreferences.disableCallRecordings {
 							SideMenuEntry(
 								iconName: "record-fill",
@@ -190,6 +200,7 @@ struct SideMenu: View {
 			isShowLoginFragment: .constant(false),
 			isShowAccountProfileFragment: .constant(false),
 			isShowSettingsFragment: .constant(false),
+			isShowVPNSettingsFragment: .constant(false),
 			isShowRecordingsListFragment: .constant(false),
 			isShowHelpFragment: .constant(false)
 		)

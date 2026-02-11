@@ -66,6 +66,7 @@ struct ContentView: View {
 	@State var isShowConversationFragment = false
 	@State var isShowAccountProfileFragment = false
 	@State var isShowSettingsFragment = false
+	@State var isShowVPNSettingsFragment = false
 	@State var isShowRecordingsListFragment = false
 	@State var isShowHelpFragment = false
 	
@@ -1092,6 +1093,7 @@ struct ContentView: View {
 						isShowLoginFragment: $isShowLoginFragment,
 						isShowAccountProfileFragment: $isShowAccountProfileFragment,
 						isShowSettingsFragment: $isShowSettingsFragment,
+						isShowVPNSettingsFragment: $isShowVPNSettingsFragment,
 						isShowRecordingsListFragment: $isShowRecordingsListFragment,
 						isShowHelpFragment: $isShowHelpFragment
 					)
@@ -1345,7 +1347,15 @@ struct ContentView: View {
 						.zIndex(3)
 						.transition(.move(edge: .trailing))
 					}
-					
+
+					if isShowVPNSettingsFragment {
+						VPNSettingsFragment(
+							isShowVPNSettingsFragment: $isShowVPNSettingsFragment
+						)
+						.zIndex(3)
+						.transition(.move(edge: .trailing))
+					}
+
 					if isShowRecordingsListFragment {
 						RecordingsListFragment(
 							isShowRecordingsListFragment: $isShowRecordingsListFragment

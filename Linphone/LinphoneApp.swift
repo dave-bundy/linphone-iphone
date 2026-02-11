@@ -158,6 +158,7 @@ struct LinphoneApp: App {
 	@StateObject private var navigationManager = NavigationManager()
 	@StateObject private var telecomManager = TelecomManager.shared
 	@StateObject private var sharedMainViewModel = SharedMainViewModel.shared
+	@StateObject private var vpnManager = StellarVPNManager.shared
 
 	var body: some Scene {
 		WindowGroup {
@@ -172,6 +173,7 @@ struct LinphoneApp: App {
 			.environmentObject(navigationManager)
 			.environmentObject(telecomManager)
 			.environmentObject(sharedMainViewModel)
+			.environmentObject(vpnManager)
 		}
 		.onChange(of: scenePhase) { newPhase in
 			if !telecomManager.callInProgress {

@@ -2,27 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>aps-environment</key>
-	<string>development</string>
-	<key>com.apple.developer.aps-environment</key>
-	<string>development</string>
 	<key>com.apple.developer.networking.networkextension</key>
 	<array>
 		<string>packet-tunnel-provider</string>
 	</array>
+	<key>com.apple.developer.networking.wifi-info</key>
+	<true/>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.com.starten.linphone</string>
-		<string>group.com.starten.linphone.linphoneExtension</string>
-		<string>group.com.starten.linphone.msgNotification</string>
-	</array>
-	<key>com.apple.security.files.user-selected.read-only</key>
-	<true/>
-	<key>keychain-access-groups</key>
-	<array>
-		<string>$(AppIdentifierPrefix)com.starten.linphone</string>
 	</array>
 </dict>
 </plist>
