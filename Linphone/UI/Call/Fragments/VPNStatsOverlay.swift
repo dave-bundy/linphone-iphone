@@ -124,8 +124,6 @@ struct VPNStatsOverlay: View {
     }
 
     private func formatThroughput(_ downKbps: Double, up upKbps: Double) -> String {
-        let downMbps = downKbps / 1000.0
-        let upMbps = upKbps / 1000.0
-        return String(format: "↓%.1f ↑%.1f", downMbps, upMbps)
+        return String(format: "↑%.0f ↓%.0f kbps", downKbps, upKbps)
     }
 }
