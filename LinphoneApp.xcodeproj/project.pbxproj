@@ -1898,7 +1898,16 @@
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/VPNLibs";
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNLibs/include";
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios/include/xquic",
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios",
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios/demo/**",
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios/include/**",
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios/src/common",
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios/src/transport",
+					"$(PROJECT_DIR)/../ios_smart/Wireguard/WireGuardKitC/**",
+					"$(PROJECT_DIR)/../ios_smart/xquic/demo",
+				);
 				INFOPLIST_FILE = StellarVPNExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = StellarVPNExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -1943,7 +1952,16 @@
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/VPNLibs";
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNLibs/include";
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios/include/xquic",
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios",
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios/demo/**",
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios/include/**",
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios/src/common",
+					"$(PROJECT_DIR)/../ios_smart/xquic-ios/src/transport",
+					"$(PROJECT_DIR)/../ios_smart/Wireguard/WireGuardKitC/**",
+					"$(PROJECT_DIR)/../ios_smart/xquic/demo",
+				);
 				INFOPLIST_FILE = StellarVPNExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = StellarVPNExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

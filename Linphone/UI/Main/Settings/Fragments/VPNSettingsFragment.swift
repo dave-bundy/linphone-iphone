@@ -101,28 +101,29 @@ struct VPNSettingsFragment: View {
 
                                     // Connect/Disconnect button
                                     Button(action: {
-                                        if vpnManager.vpnClient.status == .connected {
+                                        let status = vpnManager.vpnClient.status
+                                        if status == .connected || status == .connecting || status == .reconnecting {
                                             viewModel.disconnect()
                                         } else {
                                             viewModel.connect()
                                         }
                                     }) {
                                         HStack {
-                                            if viewModel.isConnecting {
+                                            if vpnManager.vpnClient.status == .connecting || vpnManager.vpnClient.status == .disconnecting {
                                                 ProgressView()
                                                     .tint(.white)
                                                     .padding(.trailing, 4)
                                             }
-                                            Text(vpnManager.vpnClient.status == .connected ? "Disconnect" : "Connect")
+                                            Text(vpnButtonLabel)
                                                 .foregroundStyle(.white)
                                                 .font(.body.weight(.semibold))
                                         }
                                         .frame(maxWidth: .infinity)
                                         .frame(height: 44)
-                                        .background(vpnManager.vpnClient.status == .connected ? Color.red : Color.orangeMain500)
+                                        .background(vpnButtonColor)
                                         .cornerRadius(10)
                                     }
-                                    .disabled(viewModel.isConnecting)
+                                    .disabled(vpnManager.vpnClient.status == .disconnecting)
                                 }
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 12)
@@ -247,6 +248,24 @@ struct VPNSettingsFragment: View {
         case .connected: return .green
         case .connecting, .reconnecting: return .orange
         default: return .red
+        }
+    }
+
+    private var vpnButtonLabel: String {
+        switch vpnManager.vpnClient.status {
+        case .connected: return "Disconnect"
+        case .connecting: return "Connecting..."
+        case .disconnecting: return "Disconnecting..."
+        case .reconnecting: return "Disconnect"
+        default: return "Connect"
+        }
+    }
+
+    private var vpnButtonColor: Color {
+        switch vpnManager.vpnClient.status {
+        case .connected, .reconnecting: return .red
+        case .connecting, .disconnecting: return .gray
+        default: return Color.orangeMain500
         }
     }
 

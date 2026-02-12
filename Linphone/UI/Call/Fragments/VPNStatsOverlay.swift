@@ -37,7 +37,7 @@ struct VPNStatsOverlay: View {
                     Circle()
                         .fill(mosColor)
                         .frame(width: 10, height: 10)
-                    Text(String(format: "MOS: %.1f/5.0", qualityValue))
+                    Text(String(format: "Audio MOS: %.1f/5.0", qualityValue))
                         .font(.system(size: 14, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
                 }
@@ -82,33 +82,33 @@ struct VPNStatsOverlay: View {
     ) -> some View {
         HStack(spacing: 8) {
             Image(systemName: isActive ? "circle.fill" : "circle")
-                .font(.system(size: 10))
+                .font(.system(size: 12))
                 .foregroundStyle(isActive ? activeColor : activeColor.opacity(0.5))
 
             Text(label)
-                .font(.system(size: 16, weight: isActive ? .bold : .regular, design: .monospaced))
+                .font(.system(size: 20, weight: isActive ? .bold : .regular, design: .monospaced))
                 .foregroundStyle(isActive ? .white : .white.opacity(0.6))
-                .frame(width: 44, alignment: .leading)
+                .frame(width: 52, alignment: .leading)
 
             if let ps = pathStats, ps.isAvailable {
                 Text(String(format: "%.0fms", ps.srttMs))
-                    .font(.system(size: 16, design: .monospaced))
+                    .font(.system(size: 20, design: .monospaced))
                     .foregroundStyle(isActive ? .white : .white.opacity(0.6))
-                    .frame(width: 52, alignment: .trailing)
+                    .frame(width: 64, alignment: .trailing)
 
                 Text(String(format: "%.1f%%", ps.packetLossPercent))
-                    .font(.system(size: 16, design: .monospaced))
+                    .font(.system(size: 20, design: .monospaced))
                     .foregroundStyle(isActive ? .white : .white.opacity(0.6))
-                    .frame(width: 52, alignment: .trailing)
+                    .frame(width: 64, alignment: .trailing)
 
                 if let downKbps = kbpsIn, let upKbps = kbpsOut {
                     Text(formatThroughput(downKbps, up: upKbps))
-                        .font(.system(size: 16, design: .monospaced))
+                        .font(.system(size: 20, design: .monospaced))
                         .foregroundStyle(isActive ? .white : .white.opacity(0.6))
                 }
             } else {
                 Text("--")
-                    .font(.system(size: 16, design: .monospaced))
+                    .font(.system(size: 20, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }
         }

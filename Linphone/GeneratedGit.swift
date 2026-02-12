@@ -1,7 +1,7 @@
 import Foundation
 
 public enum AppGitInfo {
-    public static let branch = "dev/wcwelch/get_it_compiling"
-    public static let commit = "9ac04453"
-    public static let tag = "no-tag"
+    public static let branch = "dev/dbundy-sdk-integration"
+    public static let commit = "d1b2bde0d"
+    public static let tag = "6.1.0-alpha"
 }

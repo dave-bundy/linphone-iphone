@@ -14,6 +14,7 @@ final class StellarVPNManager: ObservableObject {
     }
 
     private var statsTimer: Timer?
+    private var statusForwarder: AnyCancellable?
 
     private init() {
         self.vpnClient = StellarVPNClient(
@@ -26,6 +27,11 @@ final class StellarVPNManager: ObservableObject {
         if let defaults = UserDefaults(suiteName: "group.com.starten.linphone") {
             defaults.set("71.174.57.22", forKey: "logServerHost")
             defaults.set(9999, forKey: "logServerPort")
+        }
+
+        // Forward vpnClient status changes so views observing StellarVPNManager re-render
+        statusForwarder = vpnClient.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
         }
     }
 
