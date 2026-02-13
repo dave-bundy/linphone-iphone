@@ -25,6 +25,12 @@ final class VPNSettingsViewModel: ObservableObject {
     @Published var logServerPort: String {
         didSet { UserDefaults.standard.set(logServerPort, forKey: "vpn_log_server_port") }
     }
+    @Published var logLevel: Int {
+        didSet {
+            UserDefaults.standard.set(logLevel, forKey: "vpn_log_level")
+            Task { await manager.vpnClient.setLogLevel(logLevel) }
+        }
+    }
 
     @Published var whitelistedIPs: [String] = []
     @Published var newIPText: String = ""
@@ -43,6 +49,7 @@ final class VPNSettingsViewModel: ObservableObject {
         self.overlayEnabled = StellarVPNManager.shared.overlayEnabled
         self.logServerHost = defaults.string(forKey: "vpn_log_server") ?? "71.174.57.22"
         self.logServerPort = defaults.string(forKey: "vpn_log_server_port") ?? "9999"
+        self.logLevel = defaults.object(forKey: "vpn_log_level") as? Int ?? 2
 
         refreshWhitelist()
     }
@@ -91,10 +98,11 @@ final class VPNSettingsViewModel: ObservableObject {
 
                 try await manager.vpnClient.start()
 
-                // Configure log server
+                // Configure log server and log level
                 if let port = Int(logServerPort) {
                     await manager.vpnClient.setLogServer(host: logServerHost, port: port)
                 }
+                await manager.vpnClient.setLogLevel(logLevel)
 
                 refreshWhitelist()
             } catch {

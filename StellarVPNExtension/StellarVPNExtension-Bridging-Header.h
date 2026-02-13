@@ -33,4 +33,11 @@ uint64_t xquic_get_memory_backpressure(void);
 // Returns 0 on success, -1 if no connection
 int xquic_get_sendq_stats(uint64_t *packets_used, uint64_t *packets_free, uint64_t *packets_max);
 
+// Per-path byte counters for per-path bandwidth
+// path_id: 0 or 1, returns cumulative send/recv bytes
+int xquic_get_path_bytes(int path_id, uint64_t *send_bytes, uint64_t *recv_bytes);
+
+// Force WiFi to STANDBY mode (probes only, no data) and set Cell as active
+void xquic_force_standby_wifi(void);
+
 #endif

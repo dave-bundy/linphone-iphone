@@ -12,15 +12,19 @@ final class StellarVPNManager: ObservableObject {
     @Published var overlayEnabled: Bool {
         didSet { UserDefaults.standard.set(overlayEnabled, forKey: "vpn_overlay_enabled") }
     }
+    /// Which path the overlay should treat as "active" (delays path switch by 3s so MOS settles)
+    @Published var displayActivePath: String?
 
     private var statsTimer: Timer?
     private var statusForwarder: AnyCancellable?
+    private var pathSwitchCountdown: Int = 0
 
     // Stall detection
     private var stallConsecutiveCount: Int = 0
     private let stallThresholdSeconds: Int = 3
     private let stallThroughputMinKbps: Double = 10.0
     private var lastGoodKbpsIn: Double = 0.0
+    private var stallCooldownRemaining: Int = 0
 
     private init() {
         self.vpnClient = StellarVPNClient(
@@ -52,6 +56,22 @@ final class StellarVPNManager: ObservableObject {
                 // Keep last known stats visible in overlay when fetch fails
                 if newStats != nil {
                     self.latestStats = newStats
+
+                    // Delay only the active-path indicator by 3s so MOS values settle
+                    let realActive = newStats?.activePath
+                    if realActive != self.displayActivePath {
+                        if self.displayActivePath == nil {
+                            self.displayActivePath = realActive
+                        } else if self.pathSwitchCountdown == 0 {
+                            self.pathSwitchCountdown = 3
+                        }
+                    }
+                    if self.pathSwitchCountdown > 0 {
+                        self.pathSwitchCountdown -= 1
+                        if self.pathSwitchCountdown == 0 {
+                            self.displayActivePath = newStats?.activePath
+                        }
+                    }
                 }
 
                 // Stall detection (only while connected)
@@ -61,37 +81,36 @@ final class StellarVPNManager: ObservableObject {
                     return
                 }
 
+                // Cooldown: don't re-trigger stall detector for 30s after a forced switch
+                if self.stallCooldownRemaining > 0 {
+                    self.stallCooldownRemaining -= 1
+                }
+
                 var isStalled = false
-                if let stats = newStats {
+                if self.stallCooldownRemaining == 0, let stats = newStats {
                     // Track baseline download throughput
                     if stats.kbpsIn > self.stallThroughputMinKbps {
                         self.lastGoodKbpsIn = stats.kbpsIn
                     }
 
-                    // Stall = download collapsed from a known-good baseline
-                    // OR high PLR with no throughput
-                    let activePLR: Double
+                    // Only detect stalls on WiFi — after switching to Cell, let the probing handle switch-back
                     if stats.activePath == "Wi-Fi" {
-                        activePLR = stats.wifi?.packetLossPercent ?? 0
-                    } else {
-                        activePLR = stats.cellular?.packetLossPercent ?? 0
+                        let activePLR = stats.wifi?.packetLossPercent ?? 0
+                        let downloadCollapsed = self.lastGoodKbpsIn > 20.0 && stats.kbpsIn < self.stallThroughputMinKbps
+                        let highPLR = activePLR > 2.0 && (stats.kbpsIn + stats.kbpsOut) < self.stallThroughputMinKbps
+                        isStalled = downloadCollapsed || highPLR
                     }
-                    let downloadCollapsed = self.lastGoodKbpsIn > 20.0 && stats.kbpsIn < self.stallThroughputMinKbps
-                    let highPLR = activePLR > 2.0 && (stats.kbpsIn + stats.kbpsOut) < self.stallThroughputMinKbps
-                    isStalled = downloadCollapsed || highPLR
-                } else {
-                    // Nil stats while connected = NE unreachable = likely stalled
-                    isStalled = true
                 }
 
                 if isStalled {
                     self.stallConsecutiveCount += 1
                     if self.stallConsecutiveCount >= self.stallThresholdSeconds {
-                        NSLog("[StellarVPN] [STALL_DETECT] Stall detected (count=%d, stats=%@, lastGoodIn=%.0f) — forcing path switch",
-                              self.stallConsecutiveCount, newStats == nil ? "nil" : "low", self.lastGoodKbpsIn)
+                        NSLog("[StellarVPN] [STALL_DETECT] Stall detected (count=%d, lastGoodIn=%.0f) — forcing path switch",
+                              self.stallConsecutiveCount, self.lastGoodKbpsIn)
                         Task { await self.vpnClient.forcePathSwitch() }
                         self.stallConsecutiveCount = 0
                         self.lastGoodKbpsIn = 0
+                        self.stallCooldownRemaining = 30
                     }
                 } else {
                     self.stallConsecutiveCount = 0
@@ -104,7 +123,10 @@ final class StellarVPNManager: ObservableObject {
         statsTimer?.invalidate()
         statsTimer = nil
         latestStats = nil
+        displayActivePath = nil
+        pathSwitchCountdown = 0
         stallConsecutiveCount = 0
+        stallCooldownRemaining = 0
         lastGoodKbpsIn = 0
     }
 

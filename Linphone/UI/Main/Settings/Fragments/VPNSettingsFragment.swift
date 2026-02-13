@@ -223,6 +223,20 @@ struct VPNSettingsFragment: View {
                                             .frame(width: 60)
                                             .keyboardType(.numberPad)
                                     }
+
+                                    HStack {
+                                        Text("Log Level")
+                                            .default_text_style(styleSize: 14)
+                                        Spacer()
+                                        Picker("", selection: $viewModel.logLevel) {
+                                            Text("None").tag(0)
+                                            Text("Critical").tag(1)
+                                            Text("Standard").tag(2)
+                                            Text("Verbose").tag(3)
+                                        }
+                                        .pickerStyle(.menu)
+                                        .tint(Color.orangeMain500)
+                                    }
                                 }
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 12)

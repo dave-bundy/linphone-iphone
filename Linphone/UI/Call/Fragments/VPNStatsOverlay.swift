@@ -8,23 +8,20 @@ struct VPNStatsOverlay: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            // VPN path stats
+            // VPN path stats — always live data, only the active indicator is delayed
             if let stats = vpnManager.latestStats {
+                let active = vpnManager.displayActivePath ?? stats.activePath
                 pathRow(
                     label: "WiFi",
                     pathStats: stats.wifi,
-                    isActive: stats.activePath == "Wi-Fi",
-                    activeColor: .blue,
-                    kbpsIn: stats.activePath == "Wi-Fi" ? stats.kbpsIn : nil,
-                    kbpsOut: stats.activePath == "Wi-Fi" ? stats.kbpsOut : nil
+                    isActive: active == "Wi-Fi",
+                    activeColor: .blue
                 )
                 pathRow(
                     label: "Cell",
                     pathStats: stats.cellular,
-                    isActive: stats.activePath == "Cellular",
-                    activeColor: .orange,
-                    kbpsIn: stats.activePath == "Cellular" ? stats.kbpsIn : nil,
-                    kbpsOut: stats.activePath == "Cellular" ? stats.kbpsOut : nil
+                    isActive: active == "Cellular",
+                    activeColor: .orange
                 )
             }
 
@@ -61,7 +58,7 @@ struct VPNStatsOverlay: View {
         .padding(.vertical, 8)
         .background(Color.black.opacity(0.3))
         .cornerRadius(10)
-        .animation(.easeInOut(duration: 0.3), value: vpnManager.latestStats?.activePath)
+        .animation(.easeInOut(duration: 0.3), value: vpnManager.displayActivePath)
     }
 
     @ViewBuilder
@@ -76,9 +73,7 @@ struct VPNStatsOverlay: View {
         label: String,
         pathStats: PathStats?,
         isActive: Bool,
-        activeColor: Color,
-        kbpsIn: Double?,
-        kbpsOut: Double?
+        activeColor: Color
     ) -> some View {
         HStack(spacing: 8) {
             Image(systemName: isActive ? "circle.fill" : "circle")
@@ -96,12 +91,19 @@ struct VPNStatsOverlay: View {
                     .foregroundStyle(isActive ? .white : .white.opacity(0.6))
                     .frame(width: 64, alignment: .trailing)
 
-                Text(String(format: "%.1f%%", ps.packetLossPercent))
-                    .font(.system(size: 20, design: .monospaced))
-                    .foregroundStyle(isActive ? .white : .white.opacity(0.6))
-                    .frame(width: 64, alignment: .trailing)
+                // Per-path Network MOS
+                let mos = networkMOS(srttMs: ps.srttMs, packetLossPercent: ps.packetLossPercent)
+                HStack(spacing: 2) {
+                    Circle()
+                        .fill(mosColor(for: mos))
+                        .frame(width: 8, height: 8)
+                    Text(String(format: "%.1f", mos))
+                        .font(.system(size: 16, design: .monospaced))
+                        .foregroundStyle(isActive ? .white : .white.opacity(0.6))
+                }
+                .frame(width: 40, alignment: .trailing)
 
-                if let downKbps = kbpsIn, let upKbps = kbpsOut {
+                if let downKbps = ps.kbpsIn, let upKbps = ps.kbpsOut {
                     Text(formatThroughput(downKbps, up: upKbps))
                         .font(.system(size: 20, design: .monospaced))
                         .foregroundStyle(isActive ? .white : .white.opacity(0.6))
@@ -124,6 +126,25 @@ struct VPNStatsOverlay: View {
     }
 
     private func formatThroughput(_ downKbps: Double, up upKbps: Double) -> String {
-        return String(format: "↑%.0f ↓%.0f kbps", downKbps, upKbps)
+        return String(format: "↓%.0f ↑%.0f kbps", downKbps, upKbps)
+    }
+
+    /// E-model (ITU-T G.107) network MOS from RTT and PLR.
+    private func networkMOS(srttMs: Double, packetLossPercent: Double) -> Double {
+        let d = srttMs / 2.0  // one-way delay
+        let Id = 0.024 * d + 0.11 * max(d - 177.3, 0)
+        let Ie = 40.0 * log(1.0 + 10.0 * (packetLossPercent / 100.0))
+        let R = max(93.2 - Id - Ie, 0)
+        let mos = 1.0 + 0.035 * R + 7e-6 * R * (R - 60.0) * (100.0 - R)
+        return min(max(mos, 1.0), 5.0)
+    }
+
+    private func mosColor(for mos: Double) -> Color {
+        switch mos {
+        case 4...: return .green
+        case 3..<4: return .yellow
+        case 2..<3: return .orange
+        default: return .red
+        }
     }
 }
