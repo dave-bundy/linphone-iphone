@@ -227,7 +227,6 @@ struct CallView: View {
             .background(Color.gray900)
             .overlay(alignment: .topLeading) {
                 if StellarVPNManager.shared.overlayEnabled
-                    && StellarVPNManager.shared.vpnClient.status == .connected
                     && telecomManager.callInProgress
                     && !telecomManager.outgoingCallStarted {
                     VPNStatsOverlay(vpnManager: StellarVPNManager.shared, callStatsModel: callViewModel.callStatsModel, qualityValue: callViewModel.qualityValue)

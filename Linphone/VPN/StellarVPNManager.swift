@@ -18,8 +18,9 @@ final class StellarVPNManager: ObservableObject {
 
     // Stall detection
     private var stallConsecutiveCount: Int = 0
-    private let stallThresholdSeconds: Int = 5
+    private let stallThresholdSeconds: Int = 3
     private let stallThroughputMinKbps: Double = 10.0
+    private var lastGoodKbpsIn: Double = 0.0
 
     private init() {
         self.vpnClient = StellarVPNClient(
@@ -56,19 +57,28 @@ final class StellarVPNManager: ObservableObject {
                 // Stall detection (only while connected)
                 guard self.vpnClient.status == .connected else {
                     self.stallConsecutiveCount = 0
+                    self.lastGoodKbpsIn = 0
                     return
                 }
 
                 var isStalled = false
                 if let stats = newStats {
+                    // Track baseline download throughput
+                    if stats.kbpsIn > self.stallThroughputMinKbps {
+                        self.lastGoodKbpsIn = stats.kbpsIn
+                    }
+
+                    // Stall = download collapsed from a known-good baseline
+                    // OR high PLR with no throughput
                     let activePLR: Double
                     if stats.activePath == "Wi-Fi" {
                         activePLR = stats.wifi?.packetLossPercent ?? 0
                     } else {
                         activePLR = stats.cellular?.packetLossPercent ?? 0
                     }
-                    let totalKbps = stats.kbpsIn + stats.kbpsOut
-                    isStalled = activePLR > 5.0 && totalKbps < self.stallThroughputMinKbps
+                    let downloadCollapsed = self.lastGoodKbpsIn > 20.0 && stats.kbpsIn < self.stallThroughputMinKbps
+                    let highPLR = activePLR > 2.0 && (stats.kbpsIn + stats.kbpsOut) < self.stallThroughputMinKbps
+                    isStalled = downloadCollapsed || highPLR
                 } else {
                     // Nil stats while connected = NE unreachable = likely stalled
                     isStalled = true
@@ -77,10 +87,11 @@ final class StellarVPNManager: ObservableObject {
                 if isStalled {
                     self.stallConsecutiveCount += 1
                     if self.stallConsecutiveCount >= self.stallThresholdSeconds {
-                        NSLog("[StellarVPN] [STALL_DETECT] Stall detected (count=%d, stats=%@) — forcing path switch",
-                              self.stallConsecutiveCount, newStats == nil ? "nil" : "low")
+                        NSLog("[StellarVPN] [STALL_DETECT] Stall detected (count=%d, stats=%@, lastGoodIn=%.0f) — forcing path switch",
+                              self.stallConsecutiveCount, newStats == nil ? "nil" : "low", self.lastGoodKbpsIn)
                         Task { await self.vpnClient.forcePathSwitch() }
                         self.stallConsecutiveCount = 0
+                        self.lastGoodKbpsIn = 0
                     }
                 } else {
                     self.stallConsecutiveCount = 0
@@ -94,6 +105,7 @@ final class StellarVPNManager: ObservableObject {
         statsTimer = nil
         latestStats = nil
         stallConsecutiveCount = 0
+        lastGoodKbpsIn = 0
     }
 
     // MARK: - SIP Server Auto-Whitelist

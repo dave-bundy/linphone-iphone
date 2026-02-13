@@ -1507,7 +1507,7 @@ struct ContentView: View {
 					ToastView()
 						.zIndex(6)
 				}
-			}
+				}
 			.onChange(of: navigationManager.selectedCallId) { newCallId in
 				if newCallId != nil {
                     if !sharedMainViewModel.disableChatFeature {
