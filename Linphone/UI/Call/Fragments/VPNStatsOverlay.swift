@@ -15,13 +15,15 @@ struct VPNStatsOverlay: View {
                     label: "WiFi",
                     pathStats: stats.wifi,
                     isActive: active == "Wi-Fi",
-                    activeColor: .blue
+                    activeColor: .blue,
+                    stalled: vpnManager.wifiStalled
                 )
                 pathRow(
                     label: "Cell",
                     pathStats: stats.cellular,
                     isActive: active == "Cellular",
-                    activeColor: .orange
+                    activeColor: .orange,
+                    stalled: false
                 )
             }
 
@@ -73,19 +75,30 @@ struct VPNStatsOverlay: View {
         label: String,
         pathStats: PathStats?,
         isActive: Bool,
-        activeColor: Color
+        activeColor: Color,
+        stalled: Bool = false
     ) -> some View {
         HStack(spacing: 8) {
             Image(systemName: isActive ? "circle.fill" : "circle")
                 .font(.system(size: 12))
-                .foregroundStyle(isActive ? activeColor : activeColor.opacity(0.5))
+                .foregroundStyle(stalled ? .red : (isActive ? activeColor : activeColor.opacity(0.5)))
 
             Text(label)
                 .font(.system(size: 20, weight: isActive ? .bold : .regular, design: .monospaced))
                 .foregroundStyle(isActive ? .white : .white.opacity(0.6))
                 .frame(width: 52, alignment: .leading)
 
-            if let ps = pathStats, ps.isAvailable {
+            if stalled && !isActive {
+                // WiFi was bad enough to trigger switch — show STALL instead of stale stats
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(.red)
+                        .frame(width: 8, height: 8)
+                    Text("STALL")
+                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.red)
+                }
+            } else if let ps = pathStats, ps.isAvailable {
                 Text(String(format: "%.0fms", ps.srttMs))
                     .font(.system(size: 20, design: .monospaced))
                     .foregroundStyle(isActive ? .white : .white.opacity(0.6))

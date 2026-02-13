@@ -14,6 +14,8 @@ final class StellarVPNManager: ObservableObject {
     }
     /// Which path the overlay should treat as "active" (delays path switch by 3s so MOS settles)
     @Published var displayActivePath: String?
+    /// True when WiFi was bad enough to trigger a forced switch — overlay shows STALL indicator
+    @Published var wifiStalled: Bool = false
 
     private var statsTimer: Timer?
     private var statusForwarder: AnyCancellable?
@@ -81,6 +83,11 @@ final class StellarVPNManager: ObservableObject {
                     return
                 }
 
+                // Clear stall flag as soon as we're back on WiFi (regardless of cooldown)
+                if let stats = newStats, stats.activePath == "Wi-Fi" && self.wifiStalled {
+                    self.wifiStalled = false
+                }
+
                 // Cooldown: don't re-trigger stall detector for 30s after a forced switch
                 if self.stallCooldownRemaining > 0 {
                     self.stallCooldownRemaining -= 1
@@ -107,6 +114,7 @@ final class StellarVPNManager: ObservableObject {
                     if self.stallConsecutiveCount >= self.stallThresholdSeconds {
                         NSLog("[StellarVPN] [STALL_DETECT] Stall detected (count=%d, lastGoodIn=%.0f) — forcing path switch",
                               self.stallConsecutiveCount, self.lastGoodKbpsIn)
+                        self.wifiStalled = true
                         Task { await self.vpnClient.forcePathSwitch() }
                         self.stallConsecutiveCount = 0
                         self.lastGoodKbpsIn = 0
@@ -124,6 +132,7 @@ final class StellarVPNManager: ObservableObject {
         statsTimer = nil
         latestStats = nil
         displayActivePath = nil
+        wifiStalled = false
         pathSwitchCountdown = 0
         stallConsecutiveCount = 0
         stallCooldownRemaining = 0
