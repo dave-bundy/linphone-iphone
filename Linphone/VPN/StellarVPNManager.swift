@@ -76,6 +76,12 @@ final class StellarVPNManager: ObservableObject {
                     }
                 }
 
+                // Queue backlog warning
+                if let stats = newStats, let pct = stats.sendQueuePercent, pct > 10 {
+                    NSLog("[StellarVPN] [QUEUE_WARN] Send queue fill %d%% (%llu/%llu) backpressure=%llu",
+                          pct, stats.sendQueueUsed ?? 0, stats.sendQueueMax ?? 0, stats.injectBackpressure ?? 0)
+                }
+
                 // Stall detection (only while connected)
                 guard self.vpnClient.status == .connected else {
                     self.stallConsecutiveCount = 0
